@@ -4,6 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Notion Date Widget (Compact)</title>
+
+  <!-- ✅ 서체: Pretendard (한글/숫자 깔끔) -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css" />
+
   <style>
     :root{
       --fg: #111;
@@ -17,36 +22,37 @@
       display:grid;
       place-items:center;
       background: transparent;
-      font-family: ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo",
-                   "Noto Sans KR", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-family: "Pretendard Variable", Pretendard, ui-sans-serif, system-ui, -apple-system,
+                   "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", Roboto, Arial, sans-serif;
       color: var(--fg);
     }
 
-    /* ✅ 왼쪽에 작게 들어가도록 폭 고정 */
+    /* 왼쪽에 작게 들어가도록 */
     .wrap{
       width: 220px;
       max-width: 220px;
       padding: 4px 2px;
     }
 
+    /* ✅ 간격 벌어짐 해결: 1fr 제거, auto로 붙이고 gap만 준다 */
     .row{
       display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      align-items:end;
+      grid-template-columns: auto auto;
+      column-gap: 14px;   /* ← 월/일 사이 간격 (원하면 10~18로 조절) */
+      justify-content: start;
+      align-items: baseline;
     }
 
-    /* ✅ 달/일 숫자만 크게 */
+    /* ✅ 숫자 더 크게 + 폰트 느낌 다르게(숫자 전용 설정) */
     .big{
-      font-size: clamp(42px, 9vw, 64px);
-      font-weight: 900;
-      line-height: .95;
+      font-size: clamp(54px, 10vw, 78px); /* ← 더 키움 */
+      font-weight: 950;
+      line-height: .92;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum" 1, "ss01" 1;
     }
 
-    .left{ text-align:left; }
-    .right{ text-align:right; }
-
-    /* ✅ 하단: 년월일 + 시간 + 요일 (한 박스) */
     .metaLine{
       margin-top: 10px;
       display:inline-flex;
@@ -62,7 +68,6 @@
     }
     .dot{opacity:.5}
 
-    /* ✅ 그 아래: 지역 선택만 (한 박스) */
     .tzLine{
       margin-top: 8px;
       display:inline-flex;
@@ -104,11 +109,11 @@
 <body>
   <div class="wrap" role="img" aria-label="오늘 날짜/시간 위젯(컴팩트)">
     <div class="row">
-      <div class="big left" id="month">--</div>
-      <div class="big right" id="day">--</div>
+      <div class="big" id="month">--</div>
+      <div class="big" id="day">--</div>
     </div>
 
-    <div class="metaLine" id="meta">
+    <div class="metaLine">
       <span id="ymd">----</span>
       <span class="dot">·</span>
       <span id="time">--:--</span>
@@ -138,12 +143,8 @@
   <script>
     const STORAGE_KEY = "notion_date_widget_tz";
 
-    function getTZ(){
-      return localStorage.getItem(STORAGE_KEY) || "Asia/Seoul";
-    }
-    function setTZ(tz){
-      localStorage.setItem(STORAGE_KEY, tz);
-    }
+    function getTZ(){ return localStorage.getItem(STORAGE_KEY) || "Asia/Seoul"; }
+    function setTZ(tz){ localStorage.setItem(STORAGE_KEY, tz); }
 
     function partsNow(tz){
       const now = new Date();
@@ -173,7 +174,6 @@
 
       document.getElementById("month").textContent = month;
       document.getElementById("day").textContent = day;
-
       document.getElementById("ymd").textContent = `${year}.${month}.${day}`;
       document.getElementById("time").textContent = `${hour}:${minute}`;
       document.getElementById("weekday").textContent = `${weekday}요일`;
@@ -181,10 +181,7 @@
 
     const tzSelect = document.getElementById("tzSelect");
     tzSelect.value = getTZ();
-    tzSelect.addEventListener("change", () => {
-      setTZ(tzSelect.value);
-      update();
-    });
+    tzSelect.addEventListener("change", () => { setTZ(tzSelect.value); update(); });
 
     update();
     setInterval(update, 10000);
