@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Notion Date Widget (Compact)</title>
+  <style>
+    :root{
+      --fg: #111;
+      --muted: rgba(17,17,17,.72);
+      --soft: rgba(17,17,17,.10);
+      --chipbg: rgba(255,255,255,.65);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%; margin:0}
+    body{
+      display:grid;
+      place-items:center;
+      background: transparent;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo",
+                   "Noto Sans KR", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--fg);
+    }
+
+    /* ✅ 왼쪽에 작게 들어가도록 폭 고정 */
+    .wrap{
+      width: 220px;
+      max-width: 220px;
+      padding: 4px 2px;
+    }
+
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-items:end;
+    }
+
+    /* ✅ 달/일 숫자만 크게 */
+    .big{
+      font-size: clamp(42px, 9vw, 64px);
+      font-weight: 900;
+      line-height: .95;
+    }
+
+    .left{ text-align:left; }
+    .right{ text-align:right; }
+
+    /* ✅ 하단: 년월일 + 시간 + 요일 (한 박스) */
+    .metaLine{
+      margin-top: 10px;
+      display:inline-flex;
+      gap: 8px;
+      align-items:center;
+      border: 1px solid var(--soft);
+      background: var(--chipbg);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .dot{opacity:.5}
+
+    /* ✅ 그 아래: 지역 선택만 (한 박스) */
+    .tzLine{
+      margin-top: 8px;
+      display:inline-flex;
+      gap: 8px;
+      align-items:center;
+      border: 1px solid var(--soft);
+      background: var(--chipbg);
+      padding: 6px 10px;
+      border-radius: 999px;
+    }
+    .tzLabel{
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    select{
+      border:none;
+      background:transparent;
+      font: inherit;
+      font-size: 12px;
+      color: var(--fg);
+      outline:none;
+      cursor:pointer;
+      padding: 2px 2px;
+      max-width: 140px;
+    }
+
+    @media (prefers-color-scheme: dark){
+      :root{
+        --fg:#fff;
+        --muted: rgba(255,255,255,.78);
+        --soft: rgba(255,255,255,.14);
+        --chipbg: rgba(0,0,0,.25);
+      }
+      select{ color: var(--fg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap" role="img" aria-label="오늘 날짜/시간 위젯(컴팩트)">
+    <div class="row">
+      <div class="big left" id="month">--</div>
+      <div class="big right" id="day">--</div>
+    </div>
+
+    <div class="metaLine" id="meta">
+      <span id="ymd">----</span>
+      <span class="dot">·</span>
+      <span id="time">--:--</span>
+      <span class="dot">·</span>
+      <span id="weekday">---</span>
+    </div>
+
+    <div class="tzLine">
+      <span class="tzLabel">지역</span>
+      <select id="tzSelect" aria-label="타임존 선택">
+        <option value="Asia/Seoul">서울</option>
+        <option value="Asia/Tokyo">도쿄</option>
+        <option value="Asia/Bangkok">방콕</option>
+        <option value="Asia/Shanghai">상하이</option>
+        <option value="Asia/Taipei">타이베이</option>
+        <option value="Asia/Singapore">싱가포르</option>
+        <option value="Europe/London">런던</option>
+        <option value="Europe/Paris">파리</option>
+        <option value="America/New_York">뉴욕</option>
+        <option value="America/Los_Angeles">LA</option>
+        <option value="Australia/Sydney">시드니</option>
+        <option value="UTC">UTC</option>
+      </select>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "notion_date_widget_tz";
+
+    function getTZ(){
+      return localStorage.getItem(STORAGE_KEY) || "Asia/Seoul";
+    }
+    function setTZ(tz){
+      localStorage.setItem(STORAGE_KEY, tz);
+    }
+
+    function partsNow(tz){
+      const now = new Date();
+      const parts = new Intl.DateTimeFormat("ko-KR", {
+        timeZone: tz,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        weekday: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      }).formatToParts(now).reduce((acc, p) => (acc[p.type]=p.value, acc), {});
+      return {
+        year: parts.year,
+        month: parts.month,
+        day: parts.day,
+        weekday: parts.weekday,
+        hour: parts.hour,
+        minute: parts.minute
+      };
+    }
+
+    function update(){
+      const tz = getTZ();
+      const {year, month, day, weekday, hour, minute} = partsNow(tz);
+
+      document.getElementById("month").textContent = month;
+      document.getElementById("day").textContent = day;
+
+      document.getElementById("ymd").textContent = `${year}.${month}.${day}`;
+      document.getElementById("time").textContent = `${hour}:${minute}`;
+      document.getElementById("weekday").textContent = `${weekday}요일`;
+    }
+
+    const tzSelect = document.getElementById("tzSelect");
+    tzSelect.value = getTZ();
+    tzSelect.addEventListener("change", () => {
+      setTZ(tzSelect.value);
+      update();
+    });
+
+    update();
+    setInterval(update, 10000);
+  </script>
+</body>
+</html>
