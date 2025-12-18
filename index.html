@@ -27,32 +27,35 @@
       color: var(--fg);
     }
 
-    /* 왼쪽에 작게 들어가도록 */
+    /* ✅ 왼쪽에 작게 들어가도록 폭 고정 */
     .wrap{
       width: 220px;
       max-width: 220px;
       padding: 4px 2px;
     }
 
-    /* ✅ 간격 벌어짐 해결: 1fr 제거, auto로 붙이고 gap만 준다 */
+    /* ✅ 월/일 사이 간격: auto로 붙이고 gap만 조절 */
     .row{
       display:grid;
       grid-template-columns: auto auto;
-      column-gap: 14px;   /* ← 월/일 사이 간격 (원하면 10~18로 조절) */
+      column-gap: 14px;        /* ← 월/일 간격 (10~18 추천) */
       justify-content: start;
       align-items: baseline;
     }
 
-    /* ✅ 숫자 더 크게 + 폰트 느낌 다르게(숫자 전용 설정) */
+    /* ✅ 해결책 2: vw 제거 + clamp(하한/상한)로 안정적으로 */
     .big{
-      font-size: clamp(54px, 10vw, 78px); /* ← 더 키움 */
-      font-weight: 950;
+      font-size: clamp(64px, 4.5rem, 82px); /* ← 창 줄여도 64px 아래로 안 내려감 */
+      font-weight: 900;
       line-height: .92;
       letter-spacing: -0.02em;
+
+      /* 숫자 가독성 */
       font-variant-numeric: tabular-nums;
-      font-feature-settings: "tnum" 1, "ss01" 1;
+      font-feature-settings: "tnum" 1;
     }
 
+    /* ✅ 하단: 년월일 + 시간 + 요일 (한 박스) */
     .metaLine{
       margin-top: 10px;
       display:inline-flex;
@@ -68,6 +71,7 @@
     }
     .dot{opacity:.5}
 
+    /* ✅ 그 아래: 지역 선택만 (한 박스) */
     .tzLine{
       margin-top: 8px;
       display:inline-flex;
